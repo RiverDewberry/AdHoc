@@ -6,39 +6,50 @@ const AdHoc = @import("AdHoc");
 const SystemTest = struct {
     data: i32,
 
-    pub fn init(a: void) SystemTest
+    pub fn init(_:SystemTest) SystemTest
     {
-        _ = a;
+        std.log.debug("SystemTest: init", .{});
         return SystemTest{.data = 0};
     }
 
-    pub fn addEntity(self: SystemTest, entity: AdHoc.Entity, args: void) void
+    pub fn deinit(self: SystemTest) void
     {
+        std.log.debug("SystemTest: deinit", .{});
         _ = self;
-        _ = entity;
-        _ = args;
+    }
+
+    pub fn addEntity(self: SystemTest, entity: AdHoc.Entity) void
+    {
+        std.log.debug("SystemTest: add entity {}", .{entity});
+        _ = self;
         return;
     }
 
     pub fn removeEntity(self: SystemTest, entity: AdHoc.Entity) void
     {
+        std.log.debug("SystemTest: remove entity {}", .{entity});
         _ = self;
-        _ = entity;
         return;
     }
 
     pub fn hasEntity(self: SystemTest, entity: AdHoc.Entity) bool
     {
+        std.log.debug("SystemTest: check for entity {}", .{entity});
         _ = self;
-        _ = entity;
         return true;
     }
 };
 
-pub fn main() !void
+pub fn main(init: std.process.Init) !void
 {
-    const testSystem = AdHoc.System.init(SystemTest, "test");
+    const testSystem = AdHoc.System.init(SystemTest, "testSys");
 
     const systems = [_]AdHoc.System {testSystem};
-    const testType = AdHoc.AdHoc(&systems);
+
+    var game = AdHoc.init(init.gpa, &systems);
+    defer game.deinit();
+
+    const e = game.createEntity();
+    game.systems.testSys.addEntity(e);
+    game.removeEntity(e);
 }
