@@ -128,6 +128,21 @@ pub fn SystemStructure(comptime system: System) type
         {
             _ = self.components.remove(entity);
         }
+
+        pub fn getComponent(self: *Self, entity: Entity) system.C
+        {
+            return self.components.get(entity);
+        }
+
+        pub fn getComponentPtr(self: *Self, entity: Entity) *system.C
+        {
+            return self.components.getPtr(entity);
+        }
+
+        pub fn setComponent(self: *Self, entity: Entity, component: system.C) void
+        {
+            self.components.put(entity, component);
+        }
     };
 }
 
