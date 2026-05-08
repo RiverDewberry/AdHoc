@@ -1,55 +1,53 @@
 const std = @import("std");
+const rl = @import("raylib");
+
+const gridSystem = @import("./systems/gridPositionSystem.zig");
+const systems = [_]AdHoc.System {gridSystem.system};
+
 const Io = std.Io;
 
 const AdHoc = @import("AdHoc");
 
-const SystemTest = struct {
-    data: i32,
+var e: AdHoc.Entity = undefined;
 
-    pub fn init(_:SystemTest) SystemTest
+pub fn loop(game: *AdHoc.AdHocType(&systems)) void
+{
+    var grid = &game.systems.grid;
+    _ = &grid;
+    var gridFunctions = grid.*.functions;
+
+    grid.*.data.gridOriginPosition.x += 1;
+    if (@rem(grid.*.data.gridOriginPosition.x, 60) == 59)
     {
-        std.log.debug("SystemTest: init", .{});
-        return SystemTest{.data = 0};
+        grid.*.getComponentPtr(e).*.y += 1;
     }
 
-    pub fn deinit(self: SystemTest) void
-    {
-        std.log.debug("SystemTest: deinit", .{});
-        _ = self;
-    }
+    const position = gridFunctions.getWorldPosition(grid.*, e);
+    const dimentions = gridFunctions.getWorldDimentions(grid.*, e);
 
-    pub fn addEntity(self: SystemTest, entity: AdHoc.Entity) void
-    {
-        std.log.debug("SystemTest: add entity {}", .{entity});
-        _ = self;
-        return;
-    }
+    rl.clearBackground(rl.Color.red);
 
-    pub fn removeEntity(self: SystemTest, entity: AdHoc.Entity) void
-    {
-        std.log.debug("SystemTest: remove entity {}", .{entity});
-        _ = self;
-        return;
-    }
-
-    pub fn hasEntity(self: SystemTest, entity: AdHoc.Entity) bool
-    {
-        std.log.debug("SystemTest: check for entity {}", .{entity});
-        _ = self;
-        return true;
-    }
-};
+    rl.drawRectangle(
+        position.x,
+        position.y,
+        dimentions.width,
+        dimentions.height,
+        rl.Color.black
+    );
+}
 
 pub fn main(init: std.process.Init) !void
 {
-    const testSystem = AdHoc.System.init(SystemTest, "testSys");
-
-    const systems = [_]AdHoc.System {testSystem};
-
-    var game = AdHoc.init(init.gpa, &systems);
+    var game = AdHoc.init(init.gpa, &systems, "test", 500, 500);
     defer game.deinit();
 
-    const e = game.createEntity();
-    game.systems.testSys.addEntity(e);
+    game.systems.grid.data.gridSquareSize = 10;
+
+    rl.setTargetFPS(60);
+
+    e = game.createEntity();
+    game.systems.grid.addEntity(e);
+
+    game.runGameLoop(loop);
     game.removeEntity(e);
 }
