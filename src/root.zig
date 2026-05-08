@@ -131,12 +131,12 @@ pub fn SystemStructure(comptime system: System) type
 
         pub fn getComponent(self: *Self, entity: Entity) system.C
         {
-            return self.components.get(entity);
+            return self.components.get(entity) orelse @panic("No component :(");
         }
 
         pub fn getComponentPtr(self: *Self, entity: Entity) *system.C
         {
-            return self.components.getPtr(entity);
+            return self.components.getPtr(entity) orelse @panic("No component :(");
         }
 
         pub fn setComponent(self: *Self, entity: Entity, component: system.C) void
@@ -146,7 +146,9 @@ pub fn SystemStructure(comptime system: System) type
     };
 }
 
-fn AdHocType(comptime systems: []const System, comptime gameLoop: fn (anytype) void) type {
+pub fn AdHocType(
+    comptime systems: []const System,
+    ) type {
 
     comptime var systemNames: [systems.len][]const u8 = undefined;
     comptime var systemTypes: [systems.len]type = undefined;
@@ -214,7 +216,7 @@ fn AdHocType(comptime systems: []const System, comptime gameLoop: fn (anytype) v
             rl.closeWindow();
         }
 
-        pub fn runGameLoop(self: Self) void
+        pub fn runGameLoop(self: *Self, comptime gameLoop: fn (*Self) void) void
         {
             while (!rl.windowShouldClose())
             {
@@ -229,13 +231,12 @@ fn AdHocType(comptime systems: []const System, comptime gameLoop: fn (anytype) v
 pub fn init(
     allocator: std.mem.Allocator,
     comptime systems: []const System,
-    comptime gameLoop: fn (anytype) void,
     windowName: [:0]const u8,
     windowWidth: i32,
     windowHeight: i32)
-    AdHocType(systems, gameLoop)
+AdHocType(systems)
 {
-    var retVal: AdHocType(systems, gameLoop) = .{
+    var retVal: AdHocType(systems) = .{
         .entities = std.ArrayList(Entity).empty,
         .allocator = allocator,
         .systems = undefined
@@ -250,3 +251,5 @@ pub fn init(
     rl.initWindow(windowWidth, windowHeight, windowName);
     return retVal;
 }
+
+
