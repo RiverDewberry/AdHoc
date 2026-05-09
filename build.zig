@@ -4,7 +4,7 @@ pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
-    const mod = b.addModule("AdHoc", .{
+    const AdHoc = b.addModule("AdHoc", .{
         .root_source_file = b.path("src/root.zig"),
         .target = target,
     });
@@ -16,7 +16,7 @@ pub fn build(b: *std.Build) void {
             .target = target,
             .optimize = optimize,
             .imports = &.{
-                .{ .name = "AdHoc", .module = mod },
+                .{ .name = "AdHoc", .module = AdHoc },
             },
         }),
     });
@@ -30,6 +30,10 @@ pub fn build(b: *std.Build) void {
     const raygui = raylib_dep.module("raygui"); // raygui module
     const raylib_artifact = raylib_dep.artifact("raylib"); // raylib C library
     
+    AdHoc.linkLibrary(raylib_artifact);
+    AdHoc.addImport("raylib", raylib);
+    AdHoc.addImport("raygui", raygui);
+
     exe.root_module.linkLibrary(raylib_artifact);
     exe.root_module.addImport("raylib", raylib);
     exe.root_module.addImport("raygui", raygui);
@@ -48,7 +52,7 @@ pub fn build(b: *std.Build) void {
     }
 
     const mod_tests = b.addTest(.{
-        .root_module = mod,
+        .root_module = AdHoc,
     });
 
     const run_mod_tests = b.addRunArtifact(mod_tests);
